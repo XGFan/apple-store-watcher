@@ -1,0 +1,5 @@
+- store: R575
+  trigger: "https://api.day.app/{your_bark_token}/JustBuyIt?url=https%3A%2F%2Fwww.apple.com.cn%2Fshop%2Fbag&sound=bell"
+  sku:
+    - MU2Q3CH/A
+    - MU2P3CH/A

@@ -88,5 +88,5 @@ func main() {
 }
 
 func SendNotification(u string) {
-	_, _ = http.Get(u)
+	_, _ = http.Post(u, "text/plain", nil)
 }

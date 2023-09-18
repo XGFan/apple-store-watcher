@@ -52,8 +52,7 @@ func Check(store string, products []string) bool {
 	queryStr := q.Encode()
 
 	link := fmt.Sprintf(
-		"https://www.apple.com/%s/shop/fulfillment-messages?%s",
-		"cn",
+		"https://www.apple.com.cn/shop/fulfillment-messages?%s",
 		queryStr,
 	)
 

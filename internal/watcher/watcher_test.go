@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -88,9 +89,21 @@ func TestRenderTriggerNamePlaceholder(t *testing.T) {
 		[]string{"MK2Q4CH/A", "MK2P4CH/A"},
 		names,
 	)
-	want := "https://example.com/?store=R389&name=iPhone+Duo+-+%E5%A4%9C%E7%A9%BA%E8%89%B2+-+512GB%2C+iPhone+Duo+-+%E6%98%9F%E5%85%89%E7%99%BD%E8%89%B2+-+512GB&sku=MK2Q4CH%2FA%2CMK2P4CH%2FA"
+	want := "https://example.com/?store=R389&name=iPhone%20Duo%20-%20%E5%A4%9C%E7%A9%BA%E8%89%B2%20-%20512GB%2C%20iPhone%20Duo%20-%20%E6%98%9F%E5%85%89%E7%99%BD%E8%89%B2%20-%20512GB&sku=MK2Q4CH%2FA%2CMK2P4CH%2FA"
 	if got != want {
 		t.Fatalf("got %q, want %q", got, want)
+	}
+}
+
+func TestRenderTriggerPathSegmentDecodesToName(t *testing.T) {
+	names := map[string]string{"MK2Q4CH/A": "iPhone Duo + 夜空色 - 512GB"}
+	got := renderTrigger("https://example.com/key/title/{name}", "R389", []string{"MK2Q4CH/A"}, names)
+	u, err := url.Parse(got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := "/key/title/iPhone Duo + 夜空色 - 512GB"; u.Path != want {
+		t.Fatalf("path decoded to %q, want %q", u.Path, want)
 	}
 }
 

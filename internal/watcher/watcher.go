@@ -150,6 +150,7 @@ func availableStoreCount(result *apple.Availability) int {
 
 // renderTrigger replaces {store}, {sku} and {name} placeholders with
 // URL-escaped values, so notification URLs can include useful context.
+// Values are safe in both query and path segments (e.g. Bark's /{key}/{title}/{body}).
 // Unknown product names fall back to their part number.
 func renderTrigger(template, store string, parts []string, names map[string]string) string {
 	labels := make([]string, 0, len(parts))
@@ -162,11 +163,17 @@ func renderTrigger(template, store string, parts []string, names map[string]stri
 	}
 
 	replacer := strings.NewReplacer(
-		"{store}", url.QueryEscape(store),
-		"{sku}", url.QueryEscape(strings.Join(parts, ",")),
-		"{name}", url.QueryEscape(strings.Join(labels, ", ")),
+		"{store}", escapeValue(store),
+		"{sku}", escapeValue(strings.Join(parts, ",")),
+		"{name}", escapeValue(strings.Join(labels, ", ")),
 	)
 	return replacer.Replace(template)
+}
+
+// escapeValue is QueryEscape with spaces as %20: a "+" would be decoded as a
+// space in a query string but stays a literal "+" in a path segment.
+func escapeValue(s string) string {
+	return strings.ReplaceAll(url.QueryEscape(s), "+", "%20")
 }
 
 func withJitter(d time.Duration) time.Duration {

@@ -1,5 +1,21 @@
-- store: R575
-  trigger: "https://api.day.app/{your_bark_token}/JustBuyIt?url=https%3A%2F%2Fwww.apple.com.cn%2Fshop%2Fbag&sound=bell"
-  sku:
-    - MU2Q3CH/A
-    - MU2P3CH/A
+# 轮询间隔（最小 1s）
+interval: 30s
+
+# 持续有货时，重复提醒的间隔；无货 -> 有货会立即提醒
+notify_interval: 30m
+
+# 单次网络请求超时
+timeout: 15s
+
+rules:
+  # R389 = 上海 - 浦东，可用 `./apple-store-watcher -store` 查询
+  - store: R389
+    # 支持 {store} / {sku} / {name} 占位符，发送前会自动进行 URL 编码。
+    # {name} 会展开成 "iPhone Duo - 夜空色 - 512GB" 这样的商品名，
+    # 只有用到 {name} 时才会额外拉取商品列表。
+    trigger: "https://api.day.app/{your_bark_token}/有货了?url=https%3A%2F%2Fwww.apple.com.cn%2Fshop%2Fbag&sound=bell&group=apple-store&store={store}&name={name}"
+    sku:
+      # iPhone Duo 512GB 夜空色 / 星光白色
+      # 可用 `./apple-store-watcher -product` 查询
+      - MK2Q4CH/A
+      - MK2P4CH/A

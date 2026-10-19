@@ -1,0 +1,65 @@
+when:
+  branch: master
+  event: [push, manual]
+
+steps:
+  - name: test
+    image: golang:1.26-alpine
+    commands:
+      - go vet ./...
+      - go test -timeout 3m ./...
+
+  - name: build
+    image: docker.test4x.com/xgfan/plugin-docker-buildx-check
+    settings:
+      repo: docker.test4x.com/xgfan/apple-store-watcher
+      registry: docker.test4x.com
+      tags:
+        - "${CI_COMMIT_SHA:0:8}"
+        - latest
+      mtu: 1450
+      cache_from: docker.test4x.com/xgfan/apple-store-watcher:cache
+      cache_to: docker.test4x.com/xgfan/apple-store-watcher:cache
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+
+  # 部署就是这一步：改 infra git 里那行 image tag，Flux 拉过去部署。
+  - name: flux-bump
+    image: docker.test4x.com/xgfan/plugin-flux-bump
+    settings:
+      repo: docker.test4x.com/xgfan/apple-store-watcher
+      tag: "${CI_COMMIT_SHA:0:8}"
+      ssh_key:
+        from_secret: infra_deploy_key
+
+  - name: trigger-flux
+    image: alpine:3.20
+    failure: ignore
+    environment:
+      FLUX_URL:
+        from_secret: flux_webhook_url
+    commands:
+      - apk add --no-cache curl >/dev/null
+      - curl -sf -X POST "$FLUX_URL" -d '{}' && echo "[flux] git pull triggered"
+
+  - name: notify-success
+    image: docker.test4x.com/xgfan/plugin-bark
+    failure: ignore
+    settings:
+      server: https://notify.test4x.com
+      token:
+        from_secret: bark_token
+      status: success
+
+  - name: notify-failure
+    image: docker.test4x.com/xgfan/plugin-bark
+    failure: ignore
+    settings:
+      server: https://notify.test4x.com
+      token:
+        from_secret: bark_token
+      status: failure
+    when:
+      - status: [failure]

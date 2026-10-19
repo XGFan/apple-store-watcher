@@ -130,6 +130,17 @@ internal/notify/            通知发送
 internal/watcher/           轮询与通知策略
 ```
 
+## 部署
+
+```shell
+docker build -t apple-store-watcher .
+docker run -v $PWD/config.yaml:/etc/apple-store-watcher/config.yaml:ro apple-store-watcher
+```
+
+镜像默认读取 `/etc/apple-store-watcher/config.yaml`。
+
+push 到 `master` 后由 Woodpecker（`.woodpecker.yaml`）测试、构建镜像并更新 infra 仓库中的 image tag，Flux 完成部署。集群清单与配置（SOPS 加密）在 infra 仓库 `k8s/apps/apple-store-watcher/`。
+
 ## 注意事项
 
 - 请合理设置 `interval`，不建议低于 30 秒，避免给 Apple 服务造成压力。
